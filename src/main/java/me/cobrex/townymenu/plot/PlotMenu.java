@@ -11,6 +11,7 @@ import me.cobrex.townymenu.plot.prompt.PlotNotForSalePrompt;
 import me.cobrex.townymenu.plot.prompt.PlotSetTypePrompt;
 import me.cobrex.townymenu.settings.Localization;
 import me.cobrex.townymenu.settings.Settings;
+import me.cobrex.townymenu.town.TownMenu;
 import me.cobrex.townymenu.utils.HeadDatabaseUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -27,6 +28,7 @@ import org.mineacademy.fo.menu.button.Button;
 import org.mineacademy.fo.menu.button.ButtonConversation;
 import org.mineacademy.fo.menu.button.ButtonMenu;
 import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.remain.CompColor;
 import org.mineacademy.fo.remain.CompMaterial;
 
 import java.util.ArrayList;
@@ -38,14 +40,18 @@ public class PlotMenu extends Menu {
 	private final Button permMenuButton;
 	private final Button plotAdministrationMenuButton;
 	private final Button friendButton;
+	private final Button backToTownButton;
 	private final Town town;
+	public final String neutralColor = "#FFDAB5";
+	public final String negativeColor = "#C45F5F";
+	public final String positiveColor = "#86C45F";
 
 	private final ItemStack DUMMY_BUTTON = ItemCreator.of(CompMaterial.fromString(String.valueOf(Settings.FILLER_PLOT_MENU)), "")
 			.modelData(Integer.valueOf(Settings.FILLER_PLOT_MENU_CMD)).make();
 
 	public PlotMenu(TownBlock townBlock) throws NotRegisteredException {
 
-		setSize(9);
+		setSize(9 * 3);
 		setTitle(Localization.PlotMenu.MAIN_MENU_TITLE);
 
 		List<Resident> allOnlineResidents = new ArrayList<>();
@@ -59,27 +65,54 @@ public class PlotMenu extends Menu {
 				ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.PLOT_TOGGLE_MENU)))
 						.name(Localization.PlotMenu.TOGGLE_SETTINGS_MENU_BUTTON)
 						.modelData(Integer.valueOf(Settings.PLOT_TOGGLE_MENU_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore(Localization.PlotMenu.TOGGLE_SETTINGS_MENU_BUTTON_LORE));
 
 		permMenuButton = new ButtonMenu(new PlotPermMenu(townBlock),
 				ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.PLOT_PERMISSIONS_MENU)))
 						.name(Localization.PlotMenu.PERMISSIONS_MENU_BUTTON)
 						.modelData(Integer.valueOf(Settings.PLOT_PERMISSIONS_MENU_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore(Localization.PlotMenu.PERMISSIONS_MENU_BUTTON_LORE));
 
 		plotAdministrationMenuButton = new ButtonMenu(new PlotAdministrationMenu(townBlock),
 				ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.PLOT_ADMIN_MENU)))
 						.name(Localization.PlotMenu.PLOT_ADMIN_MENU_BUTTON)
 						.modelData(Integer.valueOf(Settings.PLOT_ADMIN_MENU_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore(Localization.PlotMenu.PLOT_ADMIN_MENU_BUTTON_LORE));
 
 		friendButton = new ButtonMenu(new FriendPlayerMenu(allOnlineResidents),
 				ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.PLOT_FRIEND_MENU)))
 						.name(Localization.PlotMenu.FRIEND_MENU_BUTTON)
 						.modelData(Integer.valueOf(Settings.PLOT_FRIEND_MENU_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore(Localization.PlotMenu.FRIEND_MENU_BUTTON_LORE));
 
 		town = townBlock.getTown();
+
+		backToTownButton = new Button() {
+			@Override
+			public void onClickedInMenu(Player player, Menu menu, ClickType click) {
+
+                try {
+                    new TownMenu(town, player).displayTo(player);
+                } catch (NotRegisteredException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+
+			@Override
+			public ItemStack getItem() {
+				return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.PLOT_TOGGLE_FIRE)))
+						.name("Town Menu")
+						.modelData(1924)
+						.color(CompColor.fromName(neutralColor))
+						.lore("Click to open the town menu")
+						.make();
+			}
+		};
 	}
 
 	@Override
@@ -92,6 +125,8 @@ public class PlotMenu extends Menu {
 			return plotAdministrationMenuButton.getItem();
 		if (slot == 7)
 			return friendButton.getItem();
+		if (slot == 26)
+			return backToTownButton.getItem();
 
 		return DUMMY_BUTTON;
 	}
@@ -101,6 +136,7 @@ public class PlotMenu extends Menu {
 		protected FriendPlayerMenu(Iterable<Resident> pages) {
 			super(PlotMenu.this, pages);
 			setTitle(Localization.PlotMenu.FriendMenu.MENU_TITLE);
+			setSize(9 * 3);
 		}
 
 		@Override
@@ -174,7 +210,7 @@ public class PlotMenu extends Menu {
 		public PlotToggleSettingsMenu(TownBlock townBlock) {
 			super(PlotMenu.this);
 
-			setSize(9 * 2);
+			setSize(9 * 3);
 
 			setTitle(Localization.PlotMenu.ToggleMenu.MENU_TITLE);
 			Button.setInfoButtonTitle(Localization.MENU_INFORMATION);
@@ -829,7 +865,7 @@ public class PlotMenu extends Menu {
 
 		protected PlotAdministrationMenu(TownBlock townBlock) {
 			super(PlotMenu.this);
-			setSize(9);
+			setSize(9 * 3);
 			setTitle(Localization.PlotMenu.PlotAdminMenu.MENU_TITLE);
 
 			plotForSaleButton = new ButtonConversation(new PlotForSalePrompt(townBlock),
@@ -859,13 +895,13 @@ public class PlotMenu extends Menu {
 
 		@Override
 		public ItemStack getItemAt(int slot) {
-			if (slot == 0)
+			if (slot == 1)
 				return plotForSaleButton.getItem();
-			if (slot == 2)
+			if (slot == 3)
 				return plotNotForSaleButton.getItem();
-			if (slot == 4)
+			if (slot == 5)
 				return plotSetTypeButton.getItem();
-			if (slot == 6)
+			if (slot == 7)
 				return plotEvictButton.getItem();
 
 			return DUMMY_BUTTON;

@@ -221,7 +221,7 @@ public class NationMenu extends Menu {
 		public NationToggleMenu(Nation nation) {
 			super(NationMenu.this);
 
-			setSize(9 * 2);
+			setSize(9 * 3);
 
 			setTitle(Localization.NationMenu.NationToggleMenu.MENU_TITLE);
 			Button.setInfoButtonTitle(Localization.MENU_INFORMATION);
@@ -377,7 +377,7 @@ public class NationMenu extends Menu {
 		protected NationTownMenu(Town town) {
 			super(NationMenu.this);
 
-			setSize(9);
+			setSize(9 * 3);
 
 			setTitle(Localization.NationMenu.NationTownMenu.MENU_TITLE);
 
@@ -408,7 +408,7 @@ public class NationMenu extends Menu {
 
 		protected NationEconomyManagementMenu(Nation nation) {
 			super(NationMenu.this);
-			setSize(9 * 2);
+			setSize(9 * 3);
 			setTitle(Localization.NationMenu.NationEconomyMenu.MENU_TITLE);
 
 			try {
@@ -554,7 +554,7 @@ public class NationMenu extends Menu {
 
 		protected NationSettingsMenu(Nation nation) {
 			super(NationMenu.this);
-			setSize(9 * 2);
+			setSize(9 * 3);
 			setTitle(Localization.NationMenu.NationSettingsMenu.MENU_TITLE);
 			Button.setInfoButtonTitle(Localization.MENU_INFORMATION);
 
@@ -698,7 +698,7 @@ public class NationMenu extends Menu {
 
 		protected NationExtraInfo() {
 			super(NationMenu.this);
-			setSize(9 * 2);
+			setSize(9 * 3);
 		}
 
 		@Override

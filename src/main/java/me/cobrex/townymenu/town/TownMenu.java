@@ -6,8 +6,8 @@ import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.*;
 import com.palmergames.bukkit.towny.tasks.CooldownTimerTask;
-import com.palmergames.util.StringMgmt;
 import lombok.SneakyThrows;
+import me.cobrex.townymenu.nation.NationMenu;
 import me.cobrex.townymenu.plot.PlotMenu;
 import me.cobrex.townymenu.settings.Localization;
 import me.cobrex.townymenu.settings.Settings;
@@ -23,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.profile.PlayerProfile;
 import org.mineacademy.fo.Common;
-import org.mineacademy.fo.TimeUtil;
 import org.mineacademy.fo.debug.LagCatcher;
 import org.mineacademy.fo.menu.Menu;
 import org.mineacademy.fo.menu.MenuPagged;
@@ -32,16 +31,20 @@ import org.mineacademy.fo.menu.button.ButtonConversation;
 import org.mineacademy.fo.menu.button.ButtonMenu;
 import org.mineacademy.fo.menu.button.ButtonReturnBack;
 import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.remain.CompColor;
+import org.mineacademy.fo.remain.CompItemFlag;
 import org.mineacademy.fo.remain.CompMaterial;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class TownMenu extends Menu {
 
 	// TODO set up discord, spigot
+	public final String neutralColor = "#FFDAB5";
+	public final String negativeColor = "#C45F5F";
+	public final String positiveColor = "#86C45F";
+
 
 	private final Button toggleMenuButton;
 	private final Button residentListButton;
@@ -52,6 +55,7 @@ public class TownMenu extends Menu {
 	private final ItemStack townInfoButton;
 	private final Button extraInfoButton;
 	private final Button plotMenuButton;
+	private final Button nationMenuButton;
 
 	private final ItemStack DUMMY_BUTTON = ItemCreator.of(CompMaterial.fromString(String.valueOf(Settings.FILLER_TOWN_MENU)), "")
 			.modelData(Integer.valueOf(Settings.FILLER_TOWN_MENU_CMD)).make();
@@ -71,37 +75,69 @@ public class TownMenu extends Menu {
 		setSize(9 * 3);
 		setTitle(Localization.TownMenu.MAIN_MENU_TITLE);
 
+		ItemCreator nationMenuItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_MENU)))
+				.name("§e§lNation Management Menu")
+				.modelData(1920)
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
+				.lore("")
+				.lore("§7Manage the Nation")
+				.lore("your town belongs to");
+
 		ItemCreator toggleMenuItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_MENU)))
 				.name(Localization.TownMenu.TOGGLE_MENU_BUTTON)
 				.modelData(Integer.valueOf(Settings.TOGGLE_MENU_CMD))
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.TOGGLE_MENU_BUTTON_LORE);
+
 		ItemCreator residentListItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_LIST)))
 				.name(Localization.TownMenu.RESIDENT_MENU_BUTTON)
 				.modelData(Integer.valueOf(Settings.RESIDENT_LIST_CMD))
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.RESIDENT_MENU_BUTTON_LORE);
+
 		ItemCreator permissionsMenuItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.PERMISSIONS_MENU)))
 				.name(Localization.TownMenu.PERMISSIONS_MENU_BUTTON)
 				.modelData(Integer.valueOf(Settings.PERMISSIONS_MENU_CMD))
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.PERMISSIONS_MENU_BUTTON_LORE);
+
 		ItemCreator economyMenuItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.ECONOMY_MENU)))
 				.name(Localization.TownMenu.ECONOMY_MENU_BUTTON)
 				.modelData(Integer.valueOf(Settings.ECONOMY_MENU_CMD))
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.ECONOMY_MENU_BUTTON_LORE);
+
 		ItemCreator plotMenuItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.PLOT_MENU)))
 				.name(Localization.TownMenu.PLOT_MENU_BUTTON)
 				.modelData(Integer.valueOf(Settings.PLOT_MENU_CMD))
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.PLOT_MENU_BUTTON_LORE);
+
 		ItemCreator settingsMenuItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.SETTINGS_MENU)))
 				.name(Localization.TownMenu.GENERAL_SETTINGS_MENU_BUTTON)
 				.modelData(Integer.valueOf(Settings.SETTINGS_MENU_CMD))
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.GENERAL_SETTINGS_MENU_BUTTON_LORE);
+
 		ItemCreator inviteMenuItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.INVITE_MENU)))
 				.name(Localization.TownMenu.INVITE_PLAYER_MENU_BUTTON)
 				.modelData(Integer.valueOf(Settings.INVITE_MENU_CMD))
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.INVITE_PLAYER_MENU_BUTTON_LORE);
+
 		ItemCreator extraInfoItem = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.EXTRA_INFO)))
 				.name(Localization.TownMenu.EXTRA_INFO_MENU_BUTTON)
 				.modelData(Integer.valueOf(Settings.EXTRA_INFO_CMD))
+				.flags(CompItemFlag.HIDE_ATTRIBUTES)
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.EXTRA_INFO_MENU_BUTTON_LORE);
 
 		toggleMenuButton = new
@@ -112,6 +148,18 @@ public class TownMenu extends Menu {
 
 		townyPermButton = new
 				ButtonMenu(new TownyPermMenu(town), permissionsMenuItem);
+
+		if (town.hasNation()) {
+			nationMenuButton = new
+					ButtonMenu(new NationMenu(town.getNation(), player), nationMenuItem);
+		} else {
+			nationMenuButton =
+					//todo change to someting like "create nation menu"
+					new ButtonMenu(new TownMenu.ExtraTownInfo(), nationMenuItem);
+					
+		}
+
+
 
 		if (Settings.ECONOMY_ENABLED) {
 			if (TownySettings.isBankActionLimitedToBankPlots()) {
@@ -214,6 +262,7 @@ public class TownMenu extends Menu {
 				townInfoButton = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOWN_INFO_BUTTON)))
 						.name(Localization.TownMenu.TOWN_NAME + town.getName() + " " + "&7|" + (Localization.TownMenu.TOWN_POSTFIX + town.getPostfix()))
 						.modelData(Integer.valueOf(Settings.TOWN_INFO_BUTTON_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore("")
 						.lore(Localization.TownMenu.RESIDENTS + (Localization.TownMenu.NUMBER_RESIDENTS + " " + town.getNumResidents()))
 						.lore(Localization.TownMenu.CLAIM_BLOCKS + (Localization.TownMenu.TOTAL_CLAIMED_BLOCKS + " " + town.getNumTownBlocks()) + "" + "&7/" + (Localization.TownMenu.MAX_CLAIM_BLOCKS + "" + town.getMaxTownBlocks()))
@@ -224,6 +273,7 @@ public class TownMenu extends Menu {
 				townInfoButton = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOWN_INFO_BUTTON)))
 						.name(Localization.TownMenu.TOWN_NAME + town.getName() + " " + "&7|" + (Localization.TownMenu.TOWN_POSTFIX + town.getPostfix()))
 						.modelData(Integer.valueOf(Settings.TOWN_INFO_BUTTON_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore("")
 						.lore(Localization.TownMenu.RESIDENTS + (Localization.TownMenu.NUMBER_RESIDENTS + " " + town.getNumResidents()))
 						.lore(Localization.TownMenu.CLAIM_BLOCKS + (Localization.TownMenu.TOTAL_CLAIMED_BLOCKS + " " + town.getNumTownBlocks()) + "" + "&7/" + (Localization.TownMenu.MAX_CLAIM_BLOCKS + "" + town.getMaxTownBlocks()))
@@ -247,6 +297,7 @@ public class TownMenu extends Menu {
 				townInfoButton = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOWN_INFO_BUTTON)))
 						.name(Localization.TownMenu.TOWN_NAME + town.getName() + " " + "&7|" + (Localization.TownMenu.TOWN_POSTFIX + town.getPostfix()))
 						.modelData(Integer.valueOf(Settings.TOWN_INFO_BUTTON_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore("")
 						.lore(Localization.TownMenu.RESIDENTS + (Localization.TownMenu.NUMBER_RESIDENTS + " " + town.getNumResidents()))
 						.lore(Localization.TownMenu.CLAIM_BLOCKS + (Localization.TownMenu.TOTAL_CLAIMED_BLOCKS + " " + town.getNumTownBlocks()) + "" + "&7/" + (Localization.TownMenu.MAX_CLAIM_BLOCKS + "" + town.getMaxTownBlocks()))
@@ -257,6 +308,7 @@ public class TownMenu extends Menu {
 				townInfoButton = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOWN_INFO_BUTTON)))
 						.name(Localization.TownMenu.TOWN_NAME + town.getName() + " " + "&7|" + (Localization.TownMenu.TOWN_POSTFIX + town.getPostfix()))
 						.modelData(Integer.valueOf(Settings.TOWN_INFO_BUTTON_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore("")
 						.lore(Localization.TownMenu.RESIDENTS + (Localization.TownMenu.NUMBER_RESIDENTS + " " + town.getNumResidents()))
 						.lore(Localization.TownMenu.CLAIM_BLOCKS + (Localization.TownMenu.TOTAL_CLAIMED_BLOCKS + " " + town.getNumTownBlocks()) + "" + "&7/" + (Localization.TownMenu.MAX_CLAIM_BLOCKS + "" + town.getMaxTownBlocks()))
@@ -279,25 +331,26 @@ public class TownMenu extends Menu {
 
 	@Override
 	public ItemStack getItemAt(int slot) {
-		if (slot == 2)
+		if (slot == 0)
 			return toggleMenuButton.getItem();
-		if (slot == 4)
+		if (slot == 17)
 			return residentListButton.getItem();
-		if (slot == 6)
+		if (slot == 26)
 			return townyPermButton.getItem();
-		if (slot == 11)
+		if (slot == 9)
 			return generalSettingsButton.getItem();
-		if (slot == 13 && Settings.ECONOMY_ENABLED)
+		if (slot == 22 && Settings.ECONOMY_ENABLED)
 			return economyButton.getItem();
-		if (slot == 15)
+		if (slot == 8)
 			return invitePlayerButton.getItem();
-
-		if (slot == 9 * 2)
+		if (slot == 4)
 			return townInfoButton;
-		if (slot == 9 * 2 + 3)
+		if (slot == 18)
 			return extraInfoButton.getItem();
-		if (slot == 9 * 2 + 5)
+		if (slot == 23)
 			return plotMenuButton.getItem();
+		if (slot == 21)
+			return nationMenuButton.getItem();
 
 		return DUMMY_BUTTON;
 	}
@@ -311,32 +364,26 @@ public class TownMenu extends Menu {
 		private final Button openToggle;
 		private final Button taxPercentToggle;
 
+		private final Button soonToggle;
+
 		private final ItemStack DUMMY_BUTTON = ItemCreator.of(CompMaterial.fromString(String.valueOf(Settings.FILLER_TOWN_TOGGLE)), "")
 				.modelData(Integer.valueOf(Settings.FILLER_TOWN_TOGGLE_CMD)).make();
-
-		@Override
-		public String[] getInfo() {
-			return Localization.TownMenu.ToggleMenu.INFO;
-		}
 
 		public ToggleSettingsMenu(Town town) {
 			super(TownMenu.this);
 
-			setSize(9 * 2);
-
-//			ButtonReturnBack.setItemStack(ItemCreator
-//					.of(CompMaterial.APPLE)
-//					.name("Return Back")
-//					.lore("", "Click to return back")
-//					.modelData(5)
-//					.make());
-
+			setSize(9 * 3);
 
 			setTitle(Localization.TownMenu.ToggleMenu.MENU_TITLE);
-			Button.setInfoButtonTitle(Localization.MENU_INFORMATION);
 			ButtonReturnBack.setTitle(Localization.Back_Button.BACK_BUTTON_TITLE);
 			ButtonReturnBack.setLore((List<String>) Localization.Back_Button.BACK_BUTTON_LORE);
-			ButtonReturnBack.setMaterial(Settings.BACK_BUTTON);
+			ButtonReturnBack.setItemStack(ItemCreator
+					.of(CompMaterial.LEATHER_BOOTS)
+					.name("§e§lBack")
+					.lore("", "Click to return to the main menu")
+					.modelData(1957)
+					.color(CompColor.fromName(neutralColor))
+					.make());
 
 			fireToggle = new Button() {
 				@Override
@@ -351,6 +398,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_FIRE)))
 							.name(Localization.TownMenu.ToggleMenu.FIRE)
 							.modelData(Integer.valueOf(Settings.TOGGLE_FIRE_CMD))
+							.color(town.isFire() ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore("" + (town.isFire() ? Localization.TownMenu.ToggleMenu.TOGGLE_OFF : Localization.TownMenu.ToggleMenu.TOGGLE_ON)).make();
 				}
@@ -368,6 +416,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_MOBS)))
 							.name(Localization.TownMenu.ToggleMenu.MOBS)
 							.modelData(Integer.valueOf(Settings.TOGGLE_MOBS_CMD))
+							.color(town.hasMobs() ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore("" + (town.hasMobs() ? Localization.TownMenu.ToggleMenu.TOGGLE_OFF : Localization.TownMenu.ToggleMenu.TOGGLE_ON)).make();
 				}
@@ -385,6 +434,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_EXPLOSIONS)))
 							.name(Localization.TownMenu.ToggleMenu.EXPLODE)
 							.modelData(Integer.valueOf(Settings.TOGGLE_EXPLOSIONS_CMD))
+							.color(town.isExplosion() ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore("" + (town.isExplosion() ? Localization.TownMenu.ToggleMenu.TOGGLE_OFF : Localization.TownMenu.ToggleMenu.TOGGLE_ON)).make();
 				}
@@ -433,6 +483,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_PVP)))
 							.name(Localization.TownMenu.ToggleMenu.PVP)
 							.modelData(Integer.valueOf(Settings.TOGGLE_PVP_CMD))
+							.color(town.isPVP() ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore("" + (town.isPVP() ? Localization.TownMenu.ToggleMenu.TOGGLE_OFF : Localization.TownMenu.ToggleMenu.TOGGLE_ON)).make();
 				}
@@ -450,6 +501,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_PUBLIC)))
 							.name(Localization.TownMenu.ToggleMenu.PUBLIC)
 							.modelData(Integer.valueOf(Settings.TOGGLE_PUBLIC_CMD))
+							.color(town.isPublic() ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore("" + (town.isPublic() ? Localization.TownMenu.ToggleMenu.TOGGLE_OFF : Localization.TownMenu.ToggleMenu.TOGGLE_ON)).make();
 				}
@@ -467,6 +519,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_OPEN)))
 							.name(Localization.TownMenu.ToggleMenu.OPEN)
 							.modelData(Integer.valueOf(Settings.TOGGLE_OPEN_CMD))
+							.color(town.isOpen() ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore("" + (town.isOpen() ? Localization.TownMenu.ToggleMenu.TOGGLE_OFF : Localization.TownMenu.ToggleMenu.TOGGLE_ON)).make();
 				}
@@ -485,28 +538,50 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOGGLE_TAX_PERCENTAGE)))
 							.name(Localization.TownMenu.ToggleMenu.TAX_PERCENT)
 							.modelData(Integer.valueOf(Settings.TOGGLE_TAX_PERCENTAGE_CMD))
+							.color(town.isTaxPercentage() ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore("" + (town.isTaxPercentage() ? Localization.TownMenu.ToggleMenu.TOGGLE_OFF : Localization.TownMenu.ToggleMenu.TOGGLE_ON)).make();
+				}
+			};
+
+			soonToggle = new Button() {
+				@Override
+				public void onClickedInMenu(Player player, Menu menu, ClickType click) {
+
+				}
+
+				@Override
+				public ItemStack getItem() {
+					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem("LEATHER_BOOTS"))
+							.name("§e§lSoon")
+							.modelData(1943)
+							.color(CompColor.fromName(neutralColor))
+							.lore("")
+							.lore("§7Not yet available").make();
 				}
 			};
 		}
 
 		@Override
 		public ItemStack getItemAt(int slot) {
-			if (slot == 1)
+			if (slot == 0)
 				return fireToggle.getItem();
-			if (slot == 2)
+			if (slot == 1)
 				return mobsToggle.getItem();
-			if (slot == 3)
+			if (slot == 2)
 				return explosionToggle.getItem();
-			if (slot == 4)
+			if (slot == 3)
 				return pvpToggle.getItem();
-			if (slot == 5)
+			if (slot == 4)
 				return publicToggle.getItem();
-			if (slot == 6)
+			if (slot == 5)
 				return openToggle.getItem();
-			if (slot == 7)
+			if (slot == 6)
 				return taxPercentToggle.getItem();
+			if (slot == 7)
+				return soonToggle.getItem();
+			if (slot == 8)
+				return soonToggle.getItem();
 
 			return DUMMY_BUTTON;
 		}
@@ -514,15 +589,11 @@ public class TownMenu extends Menu {
 
 	public class ResidentListMenu extends MenuPagged<Resident> {
 
-		@Override
-		public String[] getInfo() {
-			return Localization.TownMenu.ResidentMenu.INFO;
-		}
-
 		protected ResidentListMenu(Iterable<Resident> pages) {
 			super(TownMenu.this, pages);
 			setTitle(Localization.TownMenu.ResidentMenu.MENU_TITLE);
-			Button.setInfoButtonTitle(Localization.MENU_INFORMATION);
+			setSize(9*3);
+
 		}
 
 		@Override
@@ -531,21 +602,14 @@ public class TownMenu extends Menu {
 //			LagCatcher.start("load-player-skulls");
 			ItemStack itemSkull = new ItemStack(Material.PLAYER_HEAD, 1);
 			SkullMeta skull = (SkullMeta) itemSkull.getItemMeta();
+			skull.setCustomModelData(1);
 			if (resident.getUUID() == null)
 				return DUMMY_BUTTON;
 //			skull.setOwningPlayer(item.getPlayer());
 			PlayerProfile profile = Bukkit.createPlayerProfile(resident.getUUID(), resident.getName());
 			skull.setOwnerProfile(profile);
 			skull.setDisplayName(ChatColor.translateAlternateColorCodes('&',
-					Localization.TownMenu.ResidentMenu.RESIDENT_NAME + resident.getFormattedName()));
-			List<String> lore = new ArrayList<>();
-			lore.add("");
-			lore.add(ChatColor.translateAlternateColorCodes('&', Localization.TownMenu.ResidentMenu.TOWN_RANK +
-					ChatColor.translateAlternateColorCodes('&', StringMgmt.join(resident.getTownRanks(), ""))));
-			lore.add("");
-			lore.add(ChatColor.translateAlternateColorCodes('&', Localization.TownMenu.ResidentMenu.ONLINE +
-					TimeUtil.getFormattedDateShort(resident.getLastOnline())));
-			skull.setLore(lore);
+					Localization.TownMenu.ResidentMenu.RESIDENT_NAME + resident.getName()));
 			itemSkull.setItemMeta(skull);
 //			LagCatcher.end("load-player-skulls", true);
 			return itemSkull;
@@ -569,45 +633,71 @@ public class TownMenu extends Menu {
 		private final Button rankButton;
 		private final Button mayorButton;
 
+		private final Button playerButton;
+
 		protected ResidentMenu(Resident resident) {
 			super(TownMenu.this);
+			Date joinedTown = new java.util.Date(resident.getJoinedTownAt());
+			Date lastSeen = new java.util.Date(resident.getLastOnline());
+			SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("dd.MM.yyyy");
+			String formattedJoinTown = dateFormat.format(joinedTown);
+			String formattedLastSeen = dateFormat.format(lastSeen);
 
-			setTitle(Localization.TownMenu.ResidentMenu.MENU_TITLE);
+			setTitle("<shift:-48><glyph:menu_cme>");
+			setSize(9*3);
+
+			playerButton = new ButtonConversation(new TownPlayerTitlePrompt(resident),
+					ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(Material.PLAYER_HEAD.toString()))
+					.skullOwner(resident.getName())
+					.name("§e§l" + resident.getName())
+					.modelData(2)
+					.lore("§dTitle: §7" + resident.getTitle())
+					.lore("§dRanks: §7" + resident.getTownRanks().toString().replace("[","").replace("]", ""))
+					.lore("§dLast seen at: §7" + formattedLastSeen)
+					.lore("§dResident since: §7" + formattedJoinTown)
+			);
+
 
 			kickButton = new ButtonConversation(new TownKickPrompt(resident),
 					ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_KICK)))
 							.name(Localization.TownMenu.ResidentMenu.KICK)
 							.modelData(Integer.valueOf(Settings.RESIDENT_KICK_CMD))
+							.color(CompColor.fromName(negativeColor))
 							.lore((List<String>) Localization.TownMenu.ResidentMenu.KICK_LORE));
 
 			titleButton = new ButtonConversation(new TownPlayerTitlePrompt(resident),
 					ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_TITLE)))
 							.name(Localization.TownMenu.ResidentMenu.TITLE)
 							.modelData(Integer.valueOf(Settings.RESIDENT_TITLE_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore((List<String>) Localization.TownMenu.ResidentMenu.TITLE_LORE));
 
 			rankButton = new ButtonConversation(new TownRankPrompt(resident),
 					ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_RANK)))
 							.name(Localization.TownMenu.ResidentMenu.RANK)
 							.modelData(Integer.valueOf(Settings.RESIDENT_RANK_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore((List<String>) Localization.TownMenu.ResidentMenu.RANK_LORE));
 
 			mayorButton = new ButtonConversation(new TownGiveMayorPrompt(resident),
 					ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_MAYOR)))
 							.name(Localization.TownMenu.ResidentMenu.MAYOR)
 							.modelData(Integer.valueOf(Settings.RESIDENT_MAYOR_CMD))
+							.color(CompColor.fromName(negativeColor))
 							.lore((List<String>) Localization.TownMenu.ResidentMenu.MAYOR_LORE));
 		}
 
 		@Override
 		public ItemStack getItemAt(int slot) {
-			if (slot == 9 + 1)
+			if (slot == 13)
+				return playerButton.getItem();
+			if (slot == 18)
 				return kickButton.getItem();
-			if (slot == 9 + 3)
+			if (slot == 8)
 				return titleButton.getItem();
-			if (slot == 9 + 5)
+			if (slot == 17)
 				return rankButton.getItem();
-			if (slot == 9 + 7)
+			if (slot == 9)
 				return mayorButton.getItem();
 
 			return DUMMY_BUTTON;
@@ -619,18 +709,22 @@ public class TownMenu extends Menu {
 		private final ItemStack BUILD_BUTTON = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.BUILD)))
 				.name(Localization.TownMenu.PlayerPermissionsMenu.BUILD)
 				.modelData(Integer.valueOf(Settings.BUILD_CMD))
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.PlayerPermissionsMenu.BUILD_LORE).make();
 		private final ItemStack BREAK_BUTTON = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.BREAK)))
 				.name(Localization.TownMenu.PlayerPermissionsMenu.BREAK)
 				.modelData(Integer.valueOf(Settings.BREAK_CMD))
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.PlayerPermissionsMenu.BREAK_LORE).make();
 		private final ItemStack ITEM_USE_BUTTON = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.ITEM_USE)))
 				.name(Localization.TownMenu.PlayerPermissionsMenu.USE)
 				.modelData(Integer.valueOf(Settings.ITEM_USE_CMD))
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.PlayerPermissionsMenu.USE_LORE).make();
 		private final ItemStack SWITCH_BUTTON = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.SWITCH)))
 				.name(Localization.TownMenu.PlayerPermissionsMenu.SWITCH)
 				.modelData(Integer.valueOf(Settings.SWITCH_CMD))
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.PlayerPermissionsMenu.SWITCH_LORE).make();
 
 		private final Button buildResidentButton;
@@ -660,16 +754,11 @@ public class TownMenu extends Menu {
 				.modelData(Integer.valueOf(Settings.FILLER_TOWN_PERMS_MENU_CMD)).make();
 
 
-		@Override
-		public String[] getInfo() {
-			return Localization.TownMenu.PlayerPermissionsMenu.INFO;
-		}
-
 		protected TownyPermMenu(Town town) {
 			super(TownMenu.this);
 			setSize(9 * 6);
 			setTitle(Localization.TownMenu.PlayerPermissionsMenu.MENU_TITLE);
-			Button.setInfoButtonTitle(Localization.MENU_INFORMATION);
+
 
 			buildResidentButton = new Button() {
 				@Override
@@ -684,6 +773,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_BUILD)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.BUILD_RES)
 							.modelData(Integer.valueOf(Settings.RESIDENT_BUILD_CMD))
+							.color(town.getPermissions().getResidentPerm(TownyPermission.ActionType.BUILD) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.BUILD_RES2, town.getPermissions().getResidentPerm(TownyPermission.ActionType.BUILD) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -701,6 +791,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.NATION_BUILD)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.BUILD_NATION)
 							.modelData(Integer.valueOf(Settings.NATION_BUILD_CMD))
+							.color(town.getPermissions().getNationPerm(TownyPermission.ActionType.BUILD) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.BUILD_NATION2, town.getPermissions().getNationPerm(TownyPermission.ActionType.BUILD) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -719,6 +810,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.ALLY_BUILD)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.BUILD_ALLY)
 							.modelData(Integer.valueOf(Settings.ALLY_BUILD_CMD))
+							.color(town.getPermissions().getAllyPerm(TownyPermission.ActionType.BUILD) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.BUILD_ALLY2, town.getPermissions().getAllyPerm(TownyPermission.ActionType.BUILD) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -736,6 +828,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.OUTSIDER_BUILD)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.BUILD_OUTSIDER)
 							.modelData(Integer.valueOf(Settings.OUTSIDER_BUILD_CMD))
+							.color(town.getPermissions().getOutsiderPerm(TownyPermission.ActionType.BUILD) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.BUILD_OUTSIDER2, town.getPermissions().getOutsiderPerm(TownyPermission.ActionType.BUILD) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -755,6 +848,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_BREAK)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.BREAK_RES)
 							.modelData(Integer.valueOf(Settings.RESIDENT_BREAK_CMD))
+							.color(town.getPermissions().getResidentPerm(TownyPermission.ActionType.DESTROY) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.BREAK_RES2, town.getPermissions().getResidentPerm(TownyPermission.ActionType.DESTROY) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -772,6 +866,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.NATION_BREAK)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.BREAK_NATION)
 							.modelData(Integer.valueOf(Settings.NATION_BREAK_CMD))
+							.color(town.getPermissions().getNationPerm(TownyPermission.ActionType.DESTROY) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.BREAK_NATION2, town.getPermissions().getNationPerm(TownyPermission.ActionType.DESTROY) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -789,6 +884,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.ALLY_BREAK)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.BREAK_ALLY)
 							.modelData(Integer.valueOf(Settings.ALLY_BREAK_CMD))
+							.color(town.getPermissions().getAllyPerm(TownyPermission.ActionType.DESTROY) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.BREAK_ALLY2, town.getPermissions().getAllyPerm(TownyPermission.ActionType.DESTROY) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -806,6 +902,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.OUTSIDER_BREAK)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.BREAK_OUTSIDER)
 							.modelData(Integer.valueOf(Settings.OUTSIDER_BREAK_CMD))
+							.color(town.getPermissions().getOutsiderPerm(TownyPermission.ActionType.DESTROY) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.BREAK_OUTSIDER2, town.getPermissions().getOutsiderPerm(TownyPermission.ActionType.DESTROY) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -825,6 +922,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_ITEM_USE)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.USE_RES)
 							.modelData(Integer.valueOf(Settings.RESIDENT_ITEM_USE_CMD))
+							.color(town.getPermissions().getResidentPerm(TownyPermission.ActionType.ITEM_USE) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.USE_RES2, town.getPermissions().getResidentPerm(TownyPermission.ActionType.ITEM_USE) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -842,6 +940,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.NATION_ITEM_USE)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.USE_NATION)
 							.modelData(Integer.valueOf(Settings.NATION_ITEM_USE_CMD))
+							.color(town.getPermissions().getNationPerm(TownyPermission.ActionType.ITEM_USE) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.USE_NATION2, town.getPermissions().getNationPerm(TownyPermission.ActionType.ITEM_USE) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -859,6 +958,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.ALLY_ITEM_USE)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.USE_ALLY)
 							.modelData(Integer.valueOf(Settings.ALLY_ITEM_USE_CMD))
+							.color(town.getPermissions().getAllyPerm(TownyPermission.ActionType.ITEM_USE) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.USE_ALLY2, town.getPermissions().getAllyPerm(TownyPermission.ActionType.ITEM_USE) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -876,6 +976,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.OUTSIDER_ITEM_USE)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.USE_OUTSIDER)
 							.modelData(Integer.valueOf(Settings.OUTSIDER_ITEM_USE_CMD))
+							.color(town.getPermissions().getOutsiderPerm(TownyPermission.ActionType.ITEM_USE) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.USE_OUTSIDER2, town.getPermissions().getOutsiderPerm(TownyPermission.ActionType.ITEM_USE) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -896,6 +997,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESIDENT_SWITCH)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.SWITCH_RES)
 							.modelData(Integer.valueOf(Settings.RESIDENT_SWITCH_CMD))
+							.color(town.getPermissions().getResidentPerm(TownyPermission.ActionType.SWITCH) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.SWITCH_RES2, town.getPermissions().getResidentPerm(TownyPermission.ActionType.SWITCH) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -913,6 +1015,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.NATION_SWITCH)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.SWITCH_NATION)
 							.modelData(Integer.valueOf(Settings.NATION_SWITCH_CMD))
+							.color(town.getPermissions().getNationPerm(TownyPermission.ActionType.SWITCH) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.SWITCH_NATION2, town.getPermissions().getNationPerm(TownyPermission.ActionType.SWITCH) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -930,6 +1033,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.ALLY_SWITCH)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.SWITCH_ALLY)
 							.modelData(Integer.valueOf(Settings.ALLY_SWITCH_CMD))
+							.color(town.getPermissions().getAllyPerm(TownyPermission.ActionType.SWITCH) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("", Localization.TownMenu.PlayerPermissionsMenu.SWITCH_ALLY2, town.getPermissions().getAllyPerm(TownyPermission.ActionType.SWITCH) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
 			};
@@ -946,6 +1050,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.OUTSIDER_SWITCH)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.SWITCH_OUTSIDER)
 							.modelData(Integer.valueOf(Settings.OUTSIDER_SWITCH_CMD))
+							.color(town.getPermissions().getOutsiderPerm(TownyPermission.ActionType.SWITCH) ? CompColor.fromName(positiveColor) : CompColor.fromName(negativeColor))
 							.lore("")
 							.lore(Localization.TownMenu.PlayerPermissionsMenu.SWITCH_OUTSIDER2, town.getPermissions().getOutsiderPerm(TownyPermission.ActionType.SWITCH) ? Localization.TownMenu.PlayerPermissionsMenu.TRUE_MSG : Localization.TownMenu.PlayerPermissionsMenu.FALSE_MSG, "", Localization.TownMenu.PlayerPermissionsMenu.CHANGE).make();
 				}
@@ -966,6 +1071,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.RESET_ALL)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.RESET)
 							.modelData(Integer.valueOf(Settings.RESET_ALL_CMD))
+							.color(CompColor.fromName(negativeColor))
 							.lore("")
 							.lore((List<String>) Localization.TownMenu.PlayerPermissionsMenu.RESET_LORE).make();
 				}
@@ -983,6 +1089,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.ALL_ON)))
 							.name(Localization.TownMenu.PlayerPermissionsMenu.ON)
 							.modelData(Integer.valueOf(Settings.ALL_ON_CMD))
+							.color(CompColor.fromName(positiveColor))
 							.lore((List<String>) Localization.TownMenu.PlayerPermissionsMenu.ON_LORE).make();
 				}
 			};
@@ -1057,16 +1164,18 @@ public class TownMenu extends Menu {
 
 		protected EconomyManagementMenu(Town town) {
 			super(TownMenu.this);
-			setSize(9 * 2);
-			setTitle(Localization.TownMenu.EconomyMenu.MENU_TITLE);
+			setSize(9 * 3);
+			setTitle("<shift:-48><glyph:menu_ct>");
 
 			try {
 				balanceButton = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOWN_BALANCE)))
 						.name(Localization.TownMenu.EconomyMenu.BALANCE)
 						.modelData(Integer.valueOf(Settings.TOWN_BALANCE_CMD))
+						.color(CompColor.fromName(neutralColor))
 						.lore("")
-						.lore(Localization.TownMenu.EconomyMenu.TOWN_BALANCE + town.getAccount().getHoldingFormattedBalance(), "",
-								Localization.TownMenu.EconomyMenu.UPKEEP + Settings.MONEY_SYMBOL + TownySettings.getTownUpkeepCost(town)).make();
+						.lore(Localization.TownMenu.EconomyMenu.TOWN_BALANCE + town.getAccount().getHoldingFormattedBalance())
+						.lore(Localization.TownMenu.EconomyMenu.UPKEEP + Settings.MONEY_SYMBOL + TownySettings.getTownUpkeepCost(town))
+						.make();
 			} catch (Throwable t) {
 				balanceButton = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOWN_BALANCE)))
 						.name("Economy Disabled").make();
@@ -1076,31 +1185,34 @@ public class TownMenu extends Menu {
 					ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.DEPOSIT)))
 							.name(Localization.TownMenu.EconomyMenu.DEPOSIT)
 							.modelData(Integer.valueOf(Settings.DEPOSIT_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore((List<String>) Localization.TownMenu.EconomyMenu.DEPOSIT_LORE));
 
 			withdrawButton = new ButtonConversation(new TownWithdrawPrompt(town),
 					ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.WITHDRAW)))
 							.name(Localization.TownMenu.EconomyMenu.WITHDRAW)
 							.modelData(Integer.valueOf(Settings.WITHDRAW_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore((List<String>) Localization.TownMenu.EconomyMenu.WITHDRAW_LORE));
 
 			setTaxButton = new ButtonConversation(new TownSetTaxPrompt(town),
 					ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.SET_TAX)))
 							.name(Localization.TownMenu.EconomyMenu.TAX)
 							.modelData(Integer.valueOf(Settings.SET_TAX_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore("")
 							.lore("" + (town.isTaxPercentage() ? Localization.TownMenu.EconomyMenu.TAX_PERCENTAGE : Localization.TownMenu.EconomyMenu.TAX_AMOUNT)));
 		}
 
 		@Override
 		public ItemStack getItemAt(int slot) {
-			if (slot == 1)
+			if (slot == 4)
 				return balanceButton;
-			if (slot == 3)
+			if (slot == 20)
 				return depositButton.getItem();
-			if (slot == 5)
+			if (slot == 22)
 				return withdrawButton.getItem();
-			if (slot == 7)
+			if (slot == 24)
 				return setTaxButton.getItem();
 
 			return DUMMY_BUTTON;
@@ -1117,16 +1229,11 @@ public class TownMenu extends Menu {
 		private final ItemStack DUMMY_BUTTON = ItemCreator.of(CompMaterial.fromString(String.valueOf(Settings.FILLER_TOWN_GENERAL_SETTINGS_MENU)), "")
 				.modelData(Integer.valueOf(Settings.FILLER_TOWN_GENERAL_SETTINGS_MENU_CMD)).make();
 
-		@Override
-		public String[] getInfo() {
-			return Localization.TownMenu.GeneralSettingsMenu.INFO;
-		}
-
 		protected GeneralSettingsMenu(Town town) {
 			super(TownMenu.this);
-			setSize(9 * 2);
+			setSize(9 * 3);
 			setTitle(Localization.TownMenu.GeneralSettingsMenu.MENU_TITLE);
-			Button.setInfoButtonTitle(Localization.MENU_INFORMATION);
+
 
 			setHomeBlockButton = new Button() {
 				@Override
@@ -1153,6 +1260,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.SET_HOME_BLOCK)))
 							.name(Localization.TownMenu.GeneralSettingsMenu.SET_HOME_BLOCK)
 							.modelData(Integer.valueOf(Settings.SET_HOME_BLOCK_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore((List<String>) Localization.TownMenu.GeneralSettingsMenu.SET_HOME_BLOCK_LORE).make();
 				}
 			};
@@ -1180,6 +1288,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.SET_TOWN_SPAWN)))
 							.name(Localization.TownMenu.GeneralSettingsMenu.SET_SPAWN)
 							.modelData(Integer.valueOf(Settings.SET_TOWN_SPAWN_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore((List<String>) Localization.TownMenu.GeneralSettingsMenu.SET_SPAWN_LORE).make();
 				}
 			};
@@ -1200,6 +1309,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.SET_TOWN_NAME)))
 							.name(Localization.TownMenu.GeneralSettingsMenu.SET_NAME)
 							.modelData(Integer.valueOf(Settings.SET_TOWN_NAME_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore((List<String>) Localization.TownMenu.GeneralSettingsMenu.SET_NAME_LORE).make();
 				}
 			};
@@ -1218,6 +1328,7 @@ public class TownMenu extends Menu {
 					return ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.SET_TOWN_BOARD)))
 							.name(Localization.TownMenu.GeneralSettingsMenu.SET_BOARD)
 							.modelData(Integer.valueOf(Settings.SET_TOWN_BOARD_CMD))
+							.color(CompColor.fromName(neutralColor))
 							.lore((List<String>) Localization.TownMenu.GeneralSettingsMenu.SET_BOARD_LORE).make();
 				}
 			};
@@ -1243,6 +1354,7 @@ public class TownMenu extends Menu {
 		protected InvitePlayerMenu(Iterable<Resident> pages) {
 			super(TownMenu.this, pages);
 			setTitle(Localization.TownMenu.ResidentMenu.MENU_TITLE);
+			setSize(9*3);
 		}
 
 		@Override
@@ -1250,6 +1362,7 @@ public class TownMenu extends Menu {
 			ItemStack itemSkull = new ItemStack(Material.PLAYER_HEAD, 1);
 			SkullMeta skull = (SkullMeta) itemSkull.getItemMeta();
 			skull.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + item.getFormattedTitleName());
+			skull.setCustomModelData(1);
 			OfflinePlayer player = Bukkit.getOfflinePlayer(item.getUUID());
 			skull.setOwningPlayer(player);
 			List<String> lore = new ArrayList<>();
@@ -1272,18 +1385,22 @@ public class TownMenu extends Menu {
 		private final ItemStack claimInfo = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.TOWN_CLAIM_INFO)))
 				.name(Localization.TownMenu.ExtraInfoMenu.CLAIMING)
 				.modelData(Integer.valueOf(Settings.TOWN_CLAIM_INFO_CMD))
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.ExtraInfoMenu.CLAIMING_LORE).make();
 		private final ItemStack extraCommands = ItemCreator.of(HeadDatabaseUtil.HeadDataUtil.createItem(String.valueOf(Settings.EXTRA_COMMANDS)))
 				.name(Localization.TownMenu.ExtraInfoMenu.COMMANDS)
 				.modelData(Integer.valueOf(Settings.EXTRA_INFO_CMD))
+				.color(CompColor.fromName(neutralColor))
 				.lore((List<String>) Localization.TownMenu.ExtraInfoMenu.COMMANDS_LORE).make();
 
 		private final ItemStack DUMMY_BUTTON = ItemCreator.of(CompMaterial.fromString(String.valueOf(Settings.FILLER_TOWN_EXTRA_INFO_MENU)), "")
-				.modelData(Integer.valueOf(Settings.FILLER_TOWN_EXTRA_INFO_MENU_CMD)).make();
+				.modelData(Integer.valueOf(Settings.FILLER_TOWN_EXTRA_INFO_MENU_CMD))
+				.make();
 
 		protected ExtraTownInfo() {
 			super(TownMenu.this);
-			setSize(9 * 2);
+			setSize(9 * 3);
+			setTitle("<shift:-48><glyph:menu_city_f>");
 		}
 
 		@Override

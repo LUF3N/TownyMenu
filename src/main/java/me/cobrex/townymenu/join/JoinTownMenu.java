@@ -38,7 +38,7 @@ public class JoinTownMenu extends Menu {
 		ItemStack headItem = HeadDatabaseUtil.HeadDataUtil.createItem("hdb-10230");
 		ItemStack materialItem = HeadDatabaseUtil.HeadDataUtil.createItem("SUNFLOWER");
 
-		setSize(9);
+		setSize(9 * 3);
 		setTitle(Localization.JoinCreateMenu.MAIN_MENU_TITLE);
 
 		List<Town> towns = new ArrayList<>(TownyUniverse.getInstance().getTowns()).stream().filter(t -> t.isOpen()).collect(Collectors.toList());

@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TownyMenuPlugin extends SimplePlugin {
-
 	public static ArrayList<Player> viewers = new ArrayList<>();
 
 	public static ArrayList<Location> viewerslocs = new ArrayList<>();
@@ -92,4 +91,5 @@ public class TownyMenuPlugin extends SimplePlugin {
 	public boolean hasPlaceholderAPI() {
 		return Bukkit.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null;
 	}
+
 }
